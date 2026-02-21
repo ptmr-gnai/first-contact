@@ -180,6 +180,104 @@ Transitions between states must interpolate smoothly, never hard-cut.
 - Alien form: abstract/geometric/luminous, not humanoid
 - Alien's base appearance should be neutral to contrast against light communications
 
+## P3: Player Input + Audio
+
+### P3 Files
+- `src/components/ColorWheel.jsx` - Primary player input. Select, pulse, and sequence colors
+- `src/components/VoiceInput.jsx` - Mic capture analyzing tonal characteristics, not words
+- `src/components/MorseCodePad.jsx` - Rhythmic tap interface, unlocked in Beat 2
+- `src/components/PlayerControls.jsx` - Container that docks inputs into GameScreen layout
+- `src/audio/toneGenerator.js` - Web Audio API. Plays the alien's sound patterns
+- `src/audio/voiceAnalyzer.js` - Pitch detection and rhythm extraction from mic input
+
+### ColorWheel.jsx - Primary Input
+Interaction model:
+- Player sees a circular color palette with 6 key colors: green, red, blue, yellow, white, amber
+- Tap a color = short pulse (dot). Hold a color = sustained glow (dash/hold)
+- Sequence multiple taps = a pattern (e.g., tap green three times)
+- Visual feedback: selected color glows/ripples on each interaction
+- Pattern preview strip shows the sequence being built
+- Auto-submits after 1.5s of no input (batches the sequence)
+- Must feel like an instrument, not a form
+
+Output event:
+```json
+{
+  "type": "color",
+  "colors": ["green", "green", "green"],
+  "timing": [210, 195, 205],
+  "holdDuration": [0, 0, 0],
+  "timestamp": 1234567890
+}
+```
+
+### VoiceInput.jsx - Tonal Capture
+The alien understands pitch, rhythm, and volume -- not words. Player hums, clicks, makes tonal sounds.
+- Push-to-talk mic button (hold to record, release to submit)
+- Real-time waveform visualization while recording
+- Extract tonal features on release via voiceAnalyzer.js
+- Max 3-5 seconds per recording
+
+Output event:
+```json
+{
+  "type": "voice",
+  "pitchContour": [220, 235, 280, 310, 440],
+  "rhythm": [0, 200, 400, 550, 800],
+  "volume": [0.6, 0.7, 0.8, 0.7, 0.5],
+  "duration": 1200,
+  "timestamp": 1234567890
+}
+```
+
+### MorseCodePad.jsx - Rhythmic Tap Input
+Unlocked in Beat 2. Single large tappable area for dot/dash patterns.
+- Short tap = dot, long press = dash (threshold ~250ms)
+- Visual feedback: pad lights up on contact
+- Auto-submits after 1.5s of no input
+
+Output event:
+```json
+{
+  "type": "morse",
+  "pattern": [".", "-", ".", "."],
+  "timing": [0, 300, 600, 850],
+  "holdDuration": [80, 400, 80, 80],
+  "timestamp": 1234567890
+}
+```
+
+### toneGenerator.js - The Alien's Voice
+Takes `alienOutput.sound` and plays it through Web Audio API:
+- Shared AudioContext (created on first user gesture)
+- OscillatorNode (sine wave) + GainNode for volume envelope
+- 20ms attack, 50ms release fade on each tone to avoid clicks
+- Schedule tones using AudioContext.currentTime for precise timing
+- Optional: layer second oscillator with slight detuning for richness
+
+### voiceAnalyzer.js - Pitch Detection
+- getUserMedia for mic access
+- AudioContext + AnalyserNode for real-time frequency data
+- Autocorrelation pitch detection on time-domain data
+- Sample at ~20Hz (every 50ms) for pitch contour
+- Detect onsets via volume spikes for rhythm extraction
+
+### P3 Integration Points
+- All inputs call `submitPlayerInput(input)` from `useGame()` context
+- Read `alienOutput.sound` to feed toneGenerator.js
+- Read `currentBeat` to control which inputs are visible (color always, morse from beat 2+)
+- Components mount inside GameScreen.jsx bottom-docked container (h-32, border-t border-chrome-subtle)
+- All components accept a `disabled` prop for preamble/resolution phases
+- AudioContext must be created after user gesture (browser autoplay policy)
+
+### P3 Priority Order
+1. ColorWheel.jsx - primary input, unblocks integration testing
+2. toneGenerator.js - alien needs a voice
+3. PlayerControls.jsx - container wiring into GameScreen
+4. MorseCodePad.jsx - simpler, unlocked later
+5. VoiceInput.jsx + voiceAnalyzer.js - wow factor but complex
+6. ambientAudio.js - stretch goal
+
 ## Technical Notes
 - Claude API: use `claude-sonnet-4-20250514` for speed
 - Keep conversation history to last 5-8 turns for token limits
@@ -188,3 +286,7 @@ Transitions between states must interpolate smoothly, never hard-cut.
 - System prompt must be firm about JSON-only responses
 - Export clear JSDoc comments on all public functions
 - Keep code modular -- teammates need to understand interfaces quickly
+- AudioContext must be created after a user gesture (browser autoplay policy)
+- Web Audio API: test on both Chrome and Safari (Safari has quirks)
+- Clean up AudioContext oscillators and nodes to prevent memory leaks
+- Keep all audio synthesized in real time, no external audio files

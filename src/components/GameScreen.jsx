@@ -2,6 +2,7 @@ import EnvironmentEffects from './EnvironmentEffects'
 import AlienDisplay from './AlienDisplay'
 import ClueLog from './ClueLog'
 import DemoControls from './DemoControls'
+import PlayerControls from './PlayerControls'
 
 export default function GameScreen() {
   return (
@@ -19,10 +20,8 @@ export default function GameScreen() {
           </div>
 
           {/* P3 input slot -- docked at bottom of center column */}
-          <div className="h-32 flex items-center justify-center border-t border-chrome-subtle shrink-0">
-            <span className="text-chrome-dim text-xs opacity-30 tracking-widest uppercase font-mono">
-              [P3 input controls]
-            </span>
+          <div className="h-32 border-t border-chrome-subtle shrink-0">
+            <PlayerControls />
           </div>
         </div>
 
