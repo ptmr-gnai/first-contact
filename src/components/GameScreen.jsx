@@ -6,22 +6,31 @@ import DemoControls from './DemoControls'
 export default function GameScreen() {
   return (
     <div className="relative w-full h-full">
+      {/* Background layer -- fixed, behind everything */}
       <EnvironmentEffects />
+
+      {/* Main layout -- full viewport, above environment */}
       <div className="relative z-10 flex h-full">
-        {/* Main area: alien center stage */}
-        <div className="flex-1 flex flex-col">
-          <AlienDisplay />
-          {/* Input slot for P3 controls */}
-          <div className="h-32 flex items-center justify-center border-t border-chrome-subtle">
-            <span className="text-chrome-dim text-xs opacity-30">[P3 input slot]</span>
+        {/* Center column: alien + input slot */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Alien center stage -- takes all remaining vertical space */}
+          <div className="flex-1 flex items-center justify-center">
+            <AlienDisplay />
+          </div>
+
+          {/* P3 input slot -- docked at bottom of center column */}
+          <div className="h-32 flex items-center justify-center border-t border-chrome-subtle shrink-0">
+            <span className="text-chrome-dim text-xs opacity-30 tracking-widest uppercase font-mono">
+              [P3 input controls]
+            </span>
           </div>
         </div>
-        {/* Clue log sidebar */}
-        <div className="w-72 border-l border-chrome-subtle">
-          <ClueLog />
-        </div>
+
+        {/* ClueLog sidebar -- collapsible, right edge */}
+        <ClueLog />
       </div>
-      {/* Demo controls overlay */}
+
+      {/* DemoControls -- floating overlay, bottom-left */}
       <DemoControls />
     </div>
   )
