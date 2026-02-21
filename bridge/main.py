@@ -57,10 +57,9 @@ def get_sensor_instances():
 
     # Accelerometer sensor
     if os.environ.get("USE_REAL_ACCEL", "").strip() == "1":
-        # TODO: from .sensors.accelerometer import PolarAccelerometerSensor
-        # instances.append(PolarAccelerometerSensor(hub))
-        logger.warning("Real accelerometer not implemented yet, using mock")
-        instances.append(MockAccelerometerSensor(hub))
+        from .sensors.accelerometer import PolarAccelerometerSensor
+        instances.append(PolarAccelerometerSensor(hub))
+        logger.info("Using REAL accelerometer sensor (Polar H10)")
     else:
         instances.append(MockAccelerometerSensor(hub))
         logger.info("Using MOCK accelerometer sensor")
