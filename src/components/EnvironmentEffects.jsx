@@ -75,13 +75,13 @@ function generateStars(count = 100) {
 }
 
 export default function EnvironmentEffects() {
-  const { currentBeat, alienEmotion } = useGame()
+  const { currentAct, alienEmotion } = useGame()
 
   const stars = useMemo(() => generateStars(110), [])
 
-  const beatGrad = BEAT_GRADIENTS[currentBeat] ?? BEAT_GRADIENTS[1]
+  const beatGrad = BEAT_GRADIENTS[currentAct] ?? BEAT_GRADIENTS[1]
   const emotionOverlay = EMOTION_OVERLAYS[alienEmotion] ?? EMOTION_OVERLAYS.curious
-  const starOpacity = (BEAT_STAR_OPACITY[currentBeat] ?? 0.55)
+  const starOpacity = (BEAT_STAR_OPACITY[currentAct] ?? 0.55)
     * ((EMOTION_STAR_OPACITY[alienEmotion] ?? 0.55) / 0.55)
 
   // Radial gradient string for the center haze that breathes with mood

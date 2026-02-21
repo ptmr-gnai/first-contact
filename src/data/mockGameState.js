@@ -105,9 +105,30 @@ export const mockGameState = {
     sound: { pitches: [], rhythm: [], duration: [] },
     emotion: 'curious',
     conceptConfirmed: null,
+    conceptTarget: null,
+    gesture: null,
+    gestureFirst: false,
     narrative: null,
     nudge: false,
   },
   interactionHistory: [],
   elapsedTime: 0,
+
+  // P4 Roguelike fields
+  strikes: 0,
+  currentAct: 1,
+  isGameOver: false,
+  eliminatedCards: [],
+  answerPanelOpen: false,
+  runNumber: 1,
+  actSolvedBefore: { 1: false, 2: false, 3: false },
+  gamePhase: 'preamble',
+
+  // P4 Roguelike actions (no-ops for demo/mock)
+  submitAnswer: () => {},
+  useHint: () => {},
+  toggleAnswerPanel: () => {},
+  startNewRun: () => {},
+  setAct: () => {},
+  setGamePhase: () => {},
 }

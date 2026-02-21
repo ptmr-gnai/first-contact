@@ -7,7 +7,7 @@ import {
   PATTERN_MAP,
 } from '../shaders/alienShaders'
 import { useEmotionLerp } from './useEmotionLerp'
-import { COLORS } from '../constants'
+import { COLORS, GESTURE_CONFIG } from '../constants'
 
 // ---------------------------------------------------------------------------
 // Pattern identification -- maps alienOutput.light to a visual pattern ID
@@ -35,6 +35,24 @@ function patternDuration(light) {
   return light.timing.reduce((a, b) => a + b, 0)
 }
 
+// Interpolate between keyframes at a given progress [0,1]
+function lerpKeyframes(keyframes, progress) {
+  if (!keyframes || keyframes.length === 0) return 0
+  if (keyframes.length === 1) return keyframes[0]
+  const p = Math.max(0, Math.min(1, progress))
+  const t = p * (keyframes.length - 1)
+  const i = Math.floor(t)
+  const frac = t - i
+  const a = keyframes[Math.min(i, keyframes.length - 1)]
+  const b = keyframes[Math.min(i + 1, keyframes.length - 1)]
+  return a + (b - a) * frac
+}
+
+// Ease in-out for gesture animations
+function easeInOut(t) {
+  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t
+}
+
 // ---------------------------------------------------------------------------
 // AlienMesh -- R3F component rendered inside a <Canvas>
 // Exposes getAnimParams() via ref for bloom controller
@@ -60,6 +78,19 @@ const AlienMesh = forwardRef(function AlienMesh(
   })
   const prevLightRef = useRef(null)
 
+  // Gesture state in refs
+  const gestureRef = useRef({
+    active: false,
+    conceptId: null,
+    startTime: 0,
+    duration: 0,
+    // When gesture completes, delay before starting pattern
+    pendingPattern: false,
+    patternDelayStart: 0,
+  })
+  // Track gesture changes by comparing alienOutput object identity + gesture field
+  const prevGestureOutputRef = useRef(null)
+
   // Shader material uniforms -- created once
   const uniforms = useMemo(() => DEFAULT_UNIFORMS(), [])
 
@@ -79,13 +110,69 @@ const AlienMesh = forwardRef(function AlienMesh(
     // 3. Get current animation params for mesh movement
     const params = getAnimParams()
 
-    // 4. Idle bob + slow rotation
-    mesh.position.y = Math.sin(elapsed * params.floatSpeed) * params.floatAmp
+    // 4. Idle bob + slow rotation (base movement)
+    let baseY = Math.sin(elapsed * params.floatSpeed) * params.floatAmp
+    let baseScale = 1.0
+    let baseZ = 0
+
+    // 5. Gesture logic -- plays BEFORE color pattern
+    // Compare by alienOutput object identity so re-teaching same concept re-triggers
+    const gesture = alienOutput?.gesture
+    const gestureFirst = alienOutput?.gestureFirst ?? false
+
+    if (gesture && alienOutput !== prevGestureOutputRef.current) {
+      prevGestureOutputRef.current = alienOutput
+      const cfg = GESTURE_CONFIG[gesture]
+      if (cfg) {
+        gestureRef.current = {
+          active: true,
+          conceptId: gesture,
+          startTime: elapsed,
+          duration: cfg.duration,
+          pendingPattern: gestureFirst,
+          patternDelayStart: 0,
+        }
+      }
+    }
+    if (!gesture && prevGestureOutputRef.current) {
+      prevGestureOutputRef.current = null
+      gestureRef.current.active = false
+    }
+
+    // Animate gesture
+    const g = gestureRef.current
+    if (g.active) {
+      const cfg = GESTURE_CONFIG[g.conceptId]
+      if (cfg) {
+        const t = Math.min((elapsed - g.startTime) / cfg.duration, 1.0)
+        const eased = easeInOut(t)
+
+        baseScale = lerpKeyframes(cfg.scaleKeyframes, eased)
+        baseY += lerpKeyframes(cfg.positionY || [0], eased)
+        baseZ = lerpKeyframes(cfg.positionZ || [0], eased)
+
+        if (t >= 1.0) {
+          g.active = false
+          if (g.pendingPattern) {
+            g.pendingPattern = false
+            g.patternDelayStart = elapsed
+          }
+        }
+      }
+    }
+
+    mesh.position.y = baseY
+    mesh.position.z = baseZ
+    mesh.scale.setScalar(baseScale)
     mesh.rotation.y += delta * params.rotSpeed
 
-    // 5. Pattern logic -- driven by alienOutput.light changes
+    // 6. Pattern logic -- driven by alienOutput.light changes
     const light = alienOutput?.light
-    if (light && light !== prevLightRef.current) {
+
+    // If gestureFirst and gesture is still active, don't start the pattern yet
+    const gestureBlocking = gestureFirst && (g.active || (g.patternDelayStart > 0 && elapsed - g.patternDelayStart < 0.5))
+
+    if (light && light !== prevLightRef.current && !gestureBlocking) {
       prevLightRef.current = light
       const patternId = identifyPattern(light)
       if (patternId && PATTERN_MAP[patternId]) {
@@ -103,6 +190,13 @@ const AlienMesh = forwardRef(function AlienMesh(
         material.uniforms.uPatternColor.value.set(cfg.color[0], cfg.color[1], cfg.color[2])
       }
     }
+
+    // After gesture delay elapses, force pattern to re-evaluate on next frame
+    if (g.patternDelayStart > 0 && elapsed - g.patternDelayStart >= 0.5) {
+      prevLightRef.current = null // reset so the pattern check block will trigger
+      g.patternDelayStart = 0
+    }
+
     // Light was cleared externally
     if (!light && prevLightRef.current) {
       prevLightRef.current = null

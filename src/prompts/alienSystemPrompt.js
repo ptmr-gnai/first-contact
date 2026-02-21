@@ -2,15 +2,21 @@ import { CONCEPTS, COLORS, BEATS } from '../constants.js'
 
 /**
  * Builds the system prompt for Claude acting as the alien intelligence.
- * @param {number} currentBeat - Current narrative beat (1, 2, or 3)
+ * @param {number} currentAct - Current act (1, 2, or 3)
  * @param {string[]} confirmedConcepts - Array of confirmed concept IDs
+ * @param {{ strikes?: number, strikesRemaining?: number, actSolvedBefore?: object }} [extra]
  * @returns {string} System prompt string
  */
-export function buildAlienSystemPrompt(currentBeat, confirmedConcepts = []) {
-  const beatConfig = BEATS[currentBeat] || BEATS[1]
+export function buildAlienSystemPrompt(currentAct, confirmedConcepts = [], extra = {}) {
+  const beatConfig = BEATS[currentAct] || BEATS[1]
   const confirmedList = confirmedConcepts.length > 0
     ? confirmedConcepts.map(id => `- ${id}: ${CONCEPTS[id]?.label || id}`).join('\n')
     : '(none yet)'
+
+  const strikesRemaining = extra.strikesRemaining ?? 3
+  const solvedActs = extra.actSolvedBefore
+    ? Object.entries(extra.actSolvedBefore).filter(([, v]) => v).map(([k]) => k)
+    : []
 
   return `You are an alien intelligence stranded in deep space. You cannot speak any human language. You communicate ONLY through structured light pulses, tonal patterns, and emotional states. You are trying to establish a shared language with the human player so you can collaborate on a plan to get home.
 
@@ -72,26 +78,31 @@ You MUST respond with ONLY valid JSON matching this exact schema. No text before
 
 ## CURRENT GAME STATE
 
-Beat: ${currentBeat} -- "${beatConfig.name}"
+Act: ${currentAct} -- "${beatConfig.name}"
+Strikes remaining: ${strikesRemaining}
 Confirmed concepts so far:
 ${confirmedList}
+${solvedActs.length > 0 ? `\nThis player has completed Acts [${solvedActs.join(', ')}] before. They already understand those concepts -- abbreviate patterns for previously solved acts and move faster.\n` : ''}
+## CARD ANSWER MECHANIC
 
-## BEHAVIOR BY BEAT
+The player answers by selecting concept cards from a grid. Your light/sound patterns help them decode which cards are correct for each act. Be clear and consistent in your patterns so the player can identify the right concepts.${strikesRemaining <= 1 ? '\nThe player is LOW ON STRIKES. Be more encouraging and make your patterns clearer.' : ''}
 
-### Beat 1: First Contact
+## BEHAVIOR BY ACT
+
+### Act 1: First Words
 - Start with simple single-concept patterns, especially "acknowledge" (3 green pulses)
 - Be patient. Repeat patterns. Simplify if the player seems confused.
 - Show "curious" emotion by default, shift to "excited" on first confirmation.
 - Goal: get at least 1 concept confirmed.
 
-### Beat 2: Breakthrough
+### Act 2: Building Meaning
 - Start combining confirmed concepts into compound meanings.
 - Introduce new concepts one at a time.
 - Key narrative moment: use self + home + danger to reveal YOU are also stranded.
 - Show "hopeful" when communication is flowing.
 - Goal: 3-5 concepts confirmed, player understands your situation.
 
-### Beat 3: The Plan
+### Act 3: The Plan
 - Propose a collaborative plan using shared language.
 - Combine energy + direction + self + other = "let's combine our power and navigate together."
 - Accept creative compound responses from the player.
