@@ -1,0 +1,21 @@
+{
+  "timestamp": 1771699429.12989,
+  "human": {
+    "x": 0.577247102938629,
+    "y": 0.4431860146419951,
+    "gesture": "left"
+  },
+  "ai": {
+    "x": 0.49635516097900895,
+    "y": 0.10442216110001223,
+    "mode": "waiting"
+  },
+  "ai_command": {
+    "x": 0.6744886333518761,
+    "y": 0.5,
+    "mode": "opinion",
+    "message": "celebrating agreement",
+    "timestamp": 1771699331.871845
+  },
+  "topic": "We should add more sensors"
+}
