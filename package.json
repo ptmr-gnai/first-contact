@@ -12,9 +12,13 @@
     "dev:full": "node src/bridge/server.js & vite"
   },
   "dependencies": {
+    "@react-three/fiber": "^9.5.0",
+    "@react-three/postprocessing": "^3.0.4",
     "framer-motion": "^12.34.3",
+    "postprocessing": "^6.38.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "three": "^0.183.1",
     "ws": "^8.18.0"
   },
   "devDependencies": {
