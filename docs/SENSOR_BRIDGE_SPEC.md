@@ -26,6 +26,21 @@ FastAPI WebSocket server that streams sensor data from Python to React at 30fps.
               └──────────────────┘
 ```
 
+## Current Status
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| SensorHub | ✅ Done | `bridge/sensor_hub.py` |
+| BaseSensor | ✅ Done | `bridge/base_sensor.py` with auto-reconnect |
+| FastAPI server | ✅ Done | `bridge/main.py` at 30fps |
+| Mock sensors | ✅ Done | `bridge/sensors/mock.py` for testing |
+| React hook | ✅ Done | `src/bridge/useSensorStream.js` |
+| Debug panel | ✅ Done | `src/components/SensorDebugPanel.jsx` |
+| Real HR sensor | ⏳ TODO | Wire `bleakheart` into `bridge/sensors/heart_rate.py` |
+| Real gesture sensor | ⏳ TODO | Wire MediaPipe into `bridge/sensors/gesture.py` |
+| Real accelerometer | ⏳ TODO | Wire `bleakheart` ACC into `bridge/sensors/accelerometer.py` |
+| Game integration | ⏳ TODO | Connect `useSensorStream` to `useGame` |
+
 ## Design Decisions
 
 ### Why Shared State Dict (not Queues)
@@ -109,15 +124,22 @@ Frontend can show degraded UI when sensors disconnect without crashing.
 ```
 bridge/
 ├── __init__.py
-├── sensor_hub.py      # SensorHub class (shared state)
-├── base_sensor.py     # BaseSensor ABC with reconnect loop
+├── sensor_hub.py      # ✅ SensorHub class (shared state)
+├── base_sensor.py     # ✅ BaseSensor ABC with reconnect loop
 ├── sensors/
 │   ├── __init__.py
-│   ├── heart_rate.py  # PolarHRSensor
-│   ├── accelerometer.py
-│   └── gesture.py     # MediaPipeGestureSensor
-├── main.py            # FastAPI app + WebSocket endpoint
-└── run.py             # Entry point: uvicorn launcher
+│   ├── mock.py        # ✅ Mock sensors for testing
+│   ├── heart_rate.py  # ⏳ TODO: PolarHRSensor
+│   ├── accelerometer.py # ⏳ TODO: PolarAccelerometerSensor
+│   └── gesture.py     # ⏳ TODO: MediaPipeGestureSensor
+├── main.py            # ✅ FastAPI app + WebSocket endpoint
+└── run.py             # ✅ Entry point: uvicorn launcher
+
+src/
+├── bridge/
+│   └── useSensorStream.js  # ✅ React hook for consuming sensor data
+└── components/
+    └── SensorDebugPanel.jsx # ✅ Debug overlay
 ```
 
 ## React Integration
@@ -138,14 +160,18 @@ if (!gesture?.connected) showWarning("Camera disconnected");
 ## Running
 
 ```bash
-# Terminal 1: Start bridge server
-cd bridge && python run.py
+# Terminal 1: Start bridge server (currently uses mock sensors)
+cd ~/Arrival/first-contact
+source .venv/bin/activate
+python -m bridge.run
 
 # Terminal 2: Start React app  
 npm run dev
 ```
 
 Server runs on `ws://localhost:8000/ws/sensors`
+
+Health check: `curl http://localhost:8000/health`
 
 ## Key Gotchas
 
