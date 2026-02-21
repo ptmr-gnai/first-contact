@@ -5,6 +5,7 @@ import { ensureAudioContext, playSequence } from '../audio/toneGenerator';
 import ColorWheel from './ColorWheel';
 import MorseCodePad from './MorseCodePad';
 import VoiceInput from './VoiceInput';
+import ConceptPicker from './ConceptPicker';
 
 const TABS = [
   { id: 'color', label: 'Color' },
@@ -16,17 +17,21 @@ const TABS = [
  * PlayerControls -- P3 container that docks into GameScreen's bottom slot.
  *
  * Responsibilities:
+ * - Shows ConceptPicker during teaching moments (when isTeaching is true)
+ * - Shows ColorWheel/Morse/Voice inputs otherwise
  * - Routes player input from active input mode to submitPlayerInput
  * - Plays alien sound patterns when alienOutput.sound changes
- * - Shows mode tabs in beat 2+ (color only in beat 1)
+ * - Shows mode tabs in act 2+ (color only in act 1)
  */
 export default function PlayerControls() {
   const {
     submitPlayerInput,
     alienOutput,
-    currentBeat,
+    currentAct,
     isProcessing,
     turnCount,
+    answerPanelOpen,
+    isTeaching,
   } = useGame();
 
   const [activeTab, setActiveTab] = useState('color');
@@ -34,8 +39,8 @@ export default function PlayerControls() {
 
   // Reset to color tab if beat drops below 2 (DemoControls can change beat)
   useEffect(() => {
-    if (currentBeat < 2) setActiveTab('color');
-  }, [currentBeat]);
+    if (currentAct < 2) setActiveTab('color');
+  }, [currentAct]);
 
   // Play alien sound patterns when they change
   useEffect(() => {
@@ -64,12 +69,27 @@ export default function PlayerControls() {
     [submitPlayerInput, isProcessing]
   );
 
-  const showTabs = currentBeat >= 2;
+  const showTabs = currentAct >= 2 && !isTeaching;
   const disabled = isProcessing;
 
+  // During teaching moments, show the ConceptPicker instead of regular inputs
+  if (isTeaching) {
+    return (
+      <div
+        className="relative h-full w-full overflow-visible transition-opacity duration-300"
+        style={answerPanelOpen ? { opacity: 0.4, pointerEvents: 'none' } : {}}
+      >
+        <ConceptPicker />
+      </div>
+    );
+  }
+
   return (
-    <div className="relative h-full w-full overflow-visible">
-      {/* Mode tabs -- beat 2+ only */}
+    <div
+      className="relative h-full w-full overflow-visible transition-opacity duration-300"
+      style={answerPanelOpen ? { opacity: 0.4, pointerEvents: 'none' } : {}}
+    >
+      {/* Mode tabs -- act 2+ only */}
       {showTabs && (
         <div className="absolute -top-7 left-1/2 -translate-x-1/2 flex gap-1 z-10">
           {TABS.map((tab) => (

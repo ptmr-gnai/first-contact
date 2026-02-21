@@ -33,13 +33,13 @@ export function shouldSendNudge(nudgeLevel, lastNudgeLevel) {
  * Builds a nudge payload to be merged into the next alien API request.
  *
  * @param {1|2|3} nudgeLevel
- * @param {number} currentBeat
+ * @param {number} currentAct
  * @param {string[]} confirmedConcepts - already-confirmed concept IDs
- * @param {string[]} availableConcepts - concepts the alien is allowed to use this beat
+ * @param {string[]} availableConcepts - concepts the alien is allowed to use this act
  * @returns {{ nudge: boolean, nudgeLevel: number, suggestion: string, availableConcepts: string[] }}
  */
-export function buildNudgePayload(nudgeLevel, currentBeat, confirmedConcepts, availableConcepts) {
-  const beatConfig = BEATS[currentBeat] ?? {}
+export function buildNudgePayload(nudgeLevel, currentAct, confirmedConcepts, availableConcepts) {
+  const beatConfig = BEATS[currentAct] ?? {}
   const beatConcepts = availableConcepts ?? beatConfig.availableConcepts ?? []
 
   const unconfirmed = beatConcepts.filter(c => !confirmedConcepts.includes(c))

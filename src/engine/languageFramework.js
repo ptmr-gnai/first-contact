@@ -158,6 +158,37 @@ export function shouldConfirmConcept(playerInput, alienOutput, confirmedConcepts
 }
 
 /**
+ * Returns an array of concept IDs to show as options in the ConceptPicker.
+ * Always includes the correct answer plus plausible distractors.
+ *
+ * @param {string} correctConceptId - the concept the alien is teaching
+ * @param {string[]} confirmedConceptIds - already-confirmed concepts (excluded as distractors)
+ * @param {number} count - total number of options (including correct answer)
+ * @returns {string[]} shuffled array of concept IDs
+ */
+export function getDistractorConcepts(correctConceptId, confirmedConceptIds = [], count = 3) {
+  const allIds = Object.keys(CONCEPTS)
+  const pool = allIds.filter(id => id !== correctConceptId && !confirmedConceptIds.includes(id))
+
+  // Shuffle pool
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]]
+  }
+
+  const distractors = pool.slice(0, count - 1)
+  const options = [correctConceptId, ...distractors]
+
+  // Shuffle final options so correct answer isn't always first
+  for (let i = options.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [options[i], options[j]] = [options[j], options[i]]
+  }
+
+  return options
+}
+
+/**
  * Returns a human-readable description of what the player communicated.
  * @param {string} conceptId
  * @returns {string}

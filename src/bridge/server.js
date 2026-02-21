@@ -1,4 +1,5 @@
 import { WebSocketServer, WebSocket } from 'ws';
+import http from 'http';
 import fs from 'fs';
 import path from 'path';
 
@@ -137,6 +138,27 @@ function shutdown() {
     process.exit(0);
   });
 }
+
+// ── Health check HTTP endpoint ──
+const HEALTH_PORT = process.env.HEALTH_PORT ? parseInt(process.env.HEALTH_PORT) : 8788;
+const healthServer = http.createServer((req, res) => {
+  if (req.url === '/health' || req.url === '/healthz') {
+    const status = {
+      status: 'ok',
+      uptime: process.uptime(),
+      wsClients: activeClient && activeClient.readyState === WebSocket.OPEN ? 1 : 0,
+      timestamp: new Date().toISOString(),
+    };
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(status));
+  } else {
+    res.writeHead(404);
+    res.end();
+  }
+});
+healthServer.listen(HEALTH_PORT, () => {
+  log(`health check at http://localhost:${HEALTH_PORT}/health`);
+});
 
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);

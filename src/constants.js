@@ -201,12 +201,85 @@ export const BRIDGE = {
   maxReconnectAttempts: 10,
 }
 
+// ── Concept Display Helpers ──
+export const CONCEPT_DOT_COLORS = {
+  acknowledge: COLORS.green,
+  danger: COLORS.red,
+  self: COLORS.blue,
+  other: COLORS.blue,
+  energy: COLORS.yellow,
+  direction: COLORS.white,
+  home: COLORS.amber,
+}
+
+export const CONCEPT_SHORT_LABELS = {
+  acknowledge: 'Yes',
+  danger: 'Danger',
+  self: 'Me',
+  other: 'You',
+  energy: 'Energy',
+  direction: 'Path',
+  home: 'Home',
+}
+
+// ── Gesture Configuration ──
+// Body movements the alien performs BEFORE sending its color "word"
+export const GESTURE_CONFIG = {
+  acknowledge: {
+    label: 'Enthusiastic bob',
+    scaleKeyframes: [1, 1.2, 1],
+    positionY: [0, 0.1, 0],
+    duration: 0.8,
+  },
+  danger: {
+    label: 'Recoil',
+    scaleKeyframes: [1, 0.8, 0.85],
+    positionY: [0, -0.05, -0.03],
+    positionZ: [0, -0.3, -0.2],
+    duration: 0.9,
+  },
+  self: {
+    label: 'Contract inward',
+    scaleKeyframes: [1, 0.7, 0.75],
+    positionY: [0, 0, 0],
+    duration: 0.7,
+  },
+  other: {
+    label: 'Extend toward camera',
+    scaleKeyframes: [1, 1.3, 1.25],
+    positionY: [0, 0, 0],
+    positionZ: [0, 0.3, 0.25],
+    duration: 0.7,
+  },
+  energy: {
+    label: 'Rapid vibration',
+    scaleKeyframes: [1, 1.05, 0.95, 1.05, 0.95, 1],
+    positionY: [0, 0.02, -0.02, 0.02, -0.02, 0],
+    duration: 0.6,
+  },
+  direction: {
+    label: 'Horizontal stretch',
+    scaleKeyframes: [1, 1.1, 1.1, 1],
+    positionY: [0, 0, 0, 0],
+    duration: 0.8,
+  },
+  home: {
+    label: 'Warm breathing pulse',
+    scaleKeyframes: [1, 1.08, 0.98, 1.05, 1],
+    positionY: [0, 0.02, -0.01, 0.01, 0],
+    duration: 1.2,
+  },
+}
+
 // ── Default Alien Output ──
 export const DEFAULT_ALIEN_OUTPUT = {
   light: null,
   sound: { pitches: [], rhythm: [], duration: [] },
   emotion: 'curious',
   conceptConfirmed: null,
+  conceptTarget: null,
+  gesture: null,
+  gestureFirst: false,
   narrative: null,
   nudge: false,
   alienIntent: '',
@@ -222,3 +295,49 @@ export const INPUT_TYPES = ['color', 'voice', 'morse']
 
 // ── Player Input Debounce ──
 export const INPUT_DEBOUNCE_MS = 250
+
+// ── P4 Roguelike: Concept Cards ──────────────────────────────────────────────
+
+export const CONCEPT_CARDS = [
+  { id: 'acknowledge', label: 'Yes / Acknowledge', isDecoy: false },
+  { id: 'danger', label: 'No / Danger', isDecoy: false },
+  { id: 'self', label: 'Self (me)', isDecoy: false },
+  { id: 'other', label: 'Other (you)', isDecoy: false },
+  { id: 'energy', label: 'Energy / Power', isDecoy: false },
+  { id: 'direction', label: 'Direction / Path', isDecoy: false },
+  { id: 'home', label: 'Home', isDecoy: false },
+]
+
+export const DECOY_CARDS = [
+  { id: 'star', label: 'Star', isDecoy: true },
+  { id: 'ship', label: 'Ship', isDecoy: true },
+  { id: 'help', label: 'Help', isDecoy: true },
+  { id: 'peace', label: 'Peace', isDecoy: true },
+  { id: 'fear', label: 'Fear', isDecoy: true },
+  { id: 'time', label: 'Time', isDecoy: true },
+  { id: 'together', label: 'Together', isDecoy: true },
+  { id: 'food', label: 'Food', isDecoy: true },
+]
+
+export const ALL_CARDS = [...CONCEPT_CARDS, ...DECOY_CARDS]
+
+// ── P4 Roguelike: Act Solutions ──────────────────────────────────────────────
+
+export const ACT_SOLUTIONS = {
+  1: ['acknowledge'],
+  2: ['self', 'home', 'danger'],
+  3: ['other', 'self', 'energy', 'direction', 'home'],
+}
+
+// ── P4 Roguelike: Strike Config ──────────────────────────────────────────────
+
+export const STRIKE_LIMIT = 3
+export const HINT_ELIMINATES = 5
+
+// ── P4 Roguelike: Acts ───────────────────────────────────────────────────────
+
+export const ACTS = {
+  1: { name: 'First Words', slotCount: 1 },
+  2: { name: 'Building Meaning', slotCount: 3 },
+  3: { name: 'The Plan', slotCount: 5 },
+}

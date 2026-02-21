@@ -3,10 +3,13 @@ import { GameEngineProvider } from './engine/gameState.jsx'
 import NarrativePreamble from './components/NarrativePreamble'
 import GameScreen from './components/GameScreen'
 import Resolution from './components/Resolution'
+import ActTransition from './components/ActTransition'
+import GameOverScreen from './components/GameOverScreen'
 import { startAmbient, stopAmbient, isAmbientRunning } from './audio/ambientAudio.js'
 
 function App() {
-  const [phase, setPhase] = useState('preamble') // 'preamble' | 'game' | 'resolution'
+  const [phase, setPhase] = useState('preamble')
+  const [transitionActs, setTransitionActs] = useState({ from: 1, to: 2 })
   const [started, setStarted] = useState(false)
   const [musicOn, setMusicOn] = useState(true)
 
@@ -32,7 +35,21 @@ function App() {
   }, [])
 
   const handlePreambleComplete = useCallback(() => setPhase('game'), [])
-  const handlePhaseChange = useCallback((nextPhase) => setPhase(nextPhase), [])
+
+  const handlePhaseChange = useCallback((nextPhase, data) => {
+    if (nextPhase === 'transition' && data?.fromAct && data?.toAct) {
+      setTransitionActs({ from: data.fromAct, to: data.toAct })
+    }
+    setPhase(nextPhase)
+  }, [])
+
+  const handleTransitionComplete = useCallback(() => {
+    setPhase('game')
+  }, [])
+
+  const handleRestart = useCallback(() => {
+    setPhase('game')
+  }, [])
 
   // Stop ambient on resolution
   useEffect(() => {
@@ -56,6 +73,19 @@ function App() {
       {started && phase === 'preamble' && <NarrativePreamble onComplete={handlePreambleComplete} />}
       {started && phase === 'game' && <GameScreen />}
       {started && phase === 'resolution' && <Resolution />}
+      {started && phase === 'transition' && (
+        <ActTransition
+          fromAct={transitionActs.from}
+          toAct={transitionActs.to}
+          onComplete={handleTransitionComplete}
+        />
+      )}
+      {started && (phase === 'gameover' || phase === 'victory') && (
+        <GameOverScreen
+          type={phase === 'victory' ? 'victory' : 'gameover'}
+          onRestart={handleRestart}
+        />
+      )}
 
       {/* Music toggle */}
       {started && (
