@@ -1,4 +1,6 @@
-export const EMOTIONS = ['curious', 'excited', 'frustrated', 'hopeful', 'grateful']
+// Re-export from canonical constants for backward compatibility
+export { EMOTIONS } from '../constants.js'
+export { CONCEPTS as CONCEPTS_MAP } from '../constants.js'
 
 export const LIGHT_PATTERNS = {
   yes: {
@@ -71,7 +73,7 @@ export const LIGHT_PATTERNS = {
 
 export const mockConfirmedConcepts = [
   {
-    id: 'yes',
+    id: 'acknowledge',
     label: 'Yes / Acknowledge',
     alienLight: LIGHT_PATTERNS.yes.light,
     playerResponse: 'Mimicked 3 green pulses',
