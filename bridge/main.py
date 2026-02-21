@@ -48,10 +48,9 @@ def get_sensor_instances():
 
     # Heart rate sensor
     if os.environ.get("USE_REAL_HR", "").strip() == "1":
-        # TODO: from .sensors.heart_rate import PolarHRSensor
-        # instances.append(PolarHRSensor(hub))
-        logger.warning("Real HR sensor not implemented yet, using mock")
-        instances.append(MockHRSensor(hub))
+        from .sensors.heart_rate import PolarHRSensor
+        instances.append(PolarHRSensor(hub))
+        logger.info("Using REAL HR sensor (Polar H10)")
     else:
         instances.append(MockHRSensor(hub))
         logger.info("Using MOCK HR sensor")
